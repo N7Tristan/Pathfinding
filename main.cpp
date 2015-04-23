@@ -1,53 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <iostream>
-#include <queue>
-#include <string>
-#include <fstream>
-#include <time.h>
-#include <unistd.h>
 
-#include "a_star.h"
-#include "heuristic.h"
-#include "serialib.h"
 
-#define DEVICE_PORT "/dev/ttyUSB0"      // FTDI
+#include "main.h"
 
 using namespace std;
-
-
-
-//******************** VARIABLES GLOBALES ********************//
-
-const int xTaille = 100;                //Nombre de noeuds (x)
-const int yTaille = 100;                //Nombre de noeuds (y)
-
-int map[xTaille][yTaille];              //Map pour afficher le chemin
-
-int mapNodesClosed[xTaille][yTaille];   //Map des noeuds déjà visités
-int mapNodesOpen[xTaille][yTaille];     //Map des noeuds à visiter
-int mapDirections[xTaille][yTaille];    //Map des directions prises
-
-
-//On a 8 directions possibles, selon x et y (noeuds voisins)
-//           n n-e e  s-e  s  s-o  o  n-o
-int dx[8] = {0, 1, 1,  1,  0, -1, -1, -1};
-int dy[8] = {1, 1, 0, -1, -1, -1,  0,  1};
-
-//*************************************************************//
-
 
 
 //Classe nécessaire pour la queue, permet de classer les éléments par coutF
 class CompareFcost
 {
-public:
-    bool operator()(node &n1, node &n2)
-    {
-       if (n1.get_coutF() > n2.get_coutF()) return true;
-       return false;
-    }
+    public:
+
+        bool operator()(node &n1, node &n2)
+        {
+            if (n1.get_coutF() > n2.get_coutF()) return true;
+            return false;
+        }
 };
 
 
@@ -223,153 +190,164 @@ int main(void)
     int Ret;                            // Utilisé pour tester le port Serial
 
     char Buffer[128];
+
     int Value = 0;
 
     //***********************************************************//
 
     enemy *Bot1;
+    enemy *Bot2;
 
+    bool isRoad = false;
 
-    int xA, yA;
-
+    int xA, yA, xB, yB;
 
     xA = 49;
     yA = 0;
 
-
-    int xB, yB;
-
     xB = 49;
     yB = 99;
 
+    getchar();
 
 
     while((yA != yB))
     {
 
-    Ret=SERIAL.Open(DEVICE_PORT,9600);                                          // Open serial link at 115200 bauds
+        Ret=SERIAL.Open(DEVICE_PORT,9600);                                       // Open serial link at 9600 bauds
 
-    if (Ret != 1)
-    {                                                                       // If an error occured...
-        printf ("Erreur\n");        // ... display a message ...
-        return Ret;                                                         // ... quit the application
-    }
-
-    //printf ("Serial port opened successfully !\n");
-
-    //cout<<"LECTURE"<<endl;
-
-    //getchar();
-
-    Ret = SERIAL.ReadString(Buffer,'\n',100,100);
-
-    Value = atoi(Buffer);
-
-    //cout<<Value<<endl;
-
-    if(Value < 100)
-    {
-    Bot1 = new enemy(49,Value,8);
-    }
-
-    else
-    {
-    Bot1 = new enemy(49,49,0);
-    }
-
-
-    int n = xTaille;
-    int m = yTaille;
-
-    int x;
-    int y;
-
-
-    // Open serial port
-
-    //Reset de la map
-    for(x = 0; x < xTaille; x++)
-    {
-        for(y = 0; y < yTaille; y++)
-        {
-            map[x][y] = 0;
+        if (Ret != 1)
+        {                                                                        // If an error occured...
+            cout<<"Erreur"<<endl;                                                 // ... display a message ...
+            return Ret;                                                          // ... quit the application
         }
-    }
 
 
-    for(x = (Bot1->xPos-25); x <= (Bot1->xPos+25); x++)
-    {
-        for(y=Bot1->yPos-25; y<=Bot1->yPos+25; y++)
+        Ret = SERIAL.ReadString(Buffer,'\n',100,100);
+
+        Value = atoi(Buffer);
+
+
+
+        if(Value < 100)
         {
-            map[x][y]=Bot1->enemyNodes[x-((Bot1->xPos)-25)][y-((Bot1->yPos)-25)];
+            Bot1 = new enemy(49, Value, 8);
         }
-    }
 
-
-    /*for(x = (Bot2->xPos-25); x <= (Bot2->xPos+25); x++)
-    {
-        for(y=Bot2->yPos-25; y<=Bot2->yPos+25; y++)
+        else
         {
-            map[x][y]=Bot2->enemyNodes[x-((Bot2->xPos)-25)][y-((Bot2->yPos)-25)];
+            Bot1 = new enemy(49, 49, 0);
         }
-    }*/
 
 
-    // A* entre (xA,yA) et (xB,yB)
-    string route = pathFinding(xA, yA, xB, yB);
+        Bot2 = new enemy(49, 49, 8);
 
 
-    //****************************************************************************
-    // Suit la route
-    if(route.length()>0)
-    {
-        int j; char c;
-        int x=xA;
-        int y=yA;
-        int i;
-        map[x][y]=2;
-        for(i=0;i<(int)route.length();i++)
+        int n = xTaille;
+        int m = yTaille;
+
+        int x;
+        int y;
+
+
+        //Reset de la map
+        for(x = 0; x < xTaille; x++)
         {
-            c =route.at(i);
-            j=atoi(&c);
-            x=x+dx[j];
-            y=y+dy[j];
-            map[x][y]=3;
-        }
-        map[x][y]=4;
-
-
- for(int x=0;x<n;x++)
-    {
-        for(int y=0;y<m;y++)
-        {
-            if(map[x][y]==0)
+            for(y = 0; y < yTaille; y++)
             {
-            cout<<". ";
-            }
-            else if(map[x][y]==1)
-            {
-            cout<<"O "; //obstacle
-            }
-            else if(map[x][y]==2)
-            {
-            cout<<"S "; //start}
-            }
-            else if(map[x][y]==3)
-            {
-            cout<<"R "; //route
-            }
-            else if(map[x][y]==4)
-            {
-            cout<<"F "; //finish
-            }
-            else
-            {
-            cout<<" ";//map[x][y];
+                map[x][y] = 0;
             }
         }
-        cout<<endl;
-    }
+
+
+        for(x = (Bot1->xPos-25); x <= (Bot1->xPos+25); x++)
+        {
+            for(y=Bot1->yPos-25; y<=Bot1->yPos+25; y++)
+            {
+                map[x][y] = map[x][y] || Bot1->enemyNodes[x-((Bot1->xPos)-25)][y-((Bot1->yPos)-25)];
+            }
+        }
+
+
+        for(x = (Bot2->xPos-25); x <= (Bot2->xPos+25); x++)
+        {
+            for(y=Bot2->yPos-25; y<=Bot2->yPos+25; y++)
+            {
+                map[x][y] = map[x][y] || Bot2->enemyNodes[x-((Bot2->xPos)-25)][y-((Bot2->yPos)-25)];
+            }
+        }
+
+
+        // A* entre (xA,yA) et (xB,yB)
+        string route = pathFinding(xA, yA, xB, yB);
+
+
+        //****************************************************************************
+        // Suit la route
+        if(route.length()>0)
+        {
+            int j;
+
+            char c;
+
+            int x = xA;
+            int y = yA;
+
+            int i;
+
+            isRoad = true;
+
+            map[x][y]=2;        //DEPART
+
+            for(i=0; i<(int)route.length(); i++)
+            {
+                c = route.at(i);
+                j = atoi(&c);
+                x = x + dx[j];
+                y = y + dy[j];
+                map[x][y] = 3;
+            }
+
+            map[x][y] = 4;        //ARRIVEE
+
+
+            for(int x=0;x<n;x++)
+            {
+                for(int y=0;y<m;y++)
+                {
+                    if(map[x][y]==0)
+                    {
+                    cout<<". ";
+                    }
+
+                    else if(map[x][y]==1)
+                    {
+                    cout<<"O "; //obstacle
+                    }
+
+                    else if(map[x][y]==2)
+                    {
+                    cout<<"S "; //start}
+                    }
+
+                    else if(map[x][y]==3)
+                    {
+                    cout<<"R "; //route
+                    }
+
+                    else if(map[x][y]==4)
+                    {
+                    cout<<"F "; //finish
+                    }
+
+                    else
+                    {
+                    cout<<"  ";
+                    }
+                }
+
+                cout<<endl;
+            }
 
 
 
@@ -386,31 +364,31 @@ int main(void)
         }*/
 
 
-    }
-    //****************************************************************************
+        }
 
 
-    SERIAL.Close();
+        SERIAL.Close();
 
-    int k; char d;
 
-    if((int)route.length()>=1)
-    {
-    d=route.at(0);
-    k=atoi(&d);
+        if(isRoad)
+        {
+            char d;
+            int k;
 
-    xA=xA+dx[k];
-    yA=yA+dy[k];
-    }
+            d = route.at(0);
+            k = atoi(&d);
 
-    usleep(500 * 1000);
+            xA = xA + dx[k];
+            yA = yA + dy[k];
+        }
 
-    std::system("clear");
+        usleep(500 * 1000);
+
+        std::system("clear");
 
     }
 
     cout<<"ARRIVE !"<<endl;
-
 
 }
 

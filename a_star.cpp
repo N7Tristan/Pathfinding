@@ -44,12 +44,12 @@ int node::get_coutF() const
     return coutF;
 }
 
-int node::calculate_heuristic(node arrivee)
+void node::calculate_heuristic(node arrivee)
 {
     this->coutH = heuristic_man(*this, arrivee);
 }
 
-int node::calculate_g(int direction)
+void node::calculate_g(int direction)
 {
     if(direction%2 == 0)
     {
@@ -62,7 +62,7 @@ int node::calculate_g(int direction)
     }
 }
 
-int node::modifyF()
+void node::modifyF()
 {
     this -> coutF = this -> coutG + this -> coutH;
 }
@@ -88,22 +88,23 @@ void enemy::setEnemyNodes()
     {
         for(j =0; j <51; j++)
         {
-            if((this->rEnemy)==0)
+            if((this -> rEnemy)==0)
             {
-            this->enemyNodes[i][j]=0;
+            this -> enemyNodes[i][j]=0;
             }
 
             else if((i-25)*(i-25) + (j-25)*(j-25) <= (this->rEnemy)*(this->rEnemy))
             {
-                this->enemyNodes[i][j]=1;
+                this -> enemyNodes[i][j]=1;
             }
 
             else
             {
-                this->enemyNodes[i][j]=0;
+                this -> enemyNodes[i][j]=0;
             }
 
         }
 
     }
 }
+

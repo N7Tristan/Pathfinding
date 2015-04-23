@@ -33,9 +33,9 @@ public:
     int get_coutF() const;
 
     //Méthodes de calculs de coûts
-    int calculate_g(int direction); //Déplacement vers un noeud voisin
-    int calculate_heuristic(node arrivee); //Heuristisue
-    int modifyF(); //Coût total
+    void calculate_g(int direction); //Déplacement vers un noeud voisin
+    void calculate_heuristic(node arrivee); //Heuristisue
+    void modifyF(); //Coût total
 };
 
 
@@ -55,5 +55,6 @@ public:
 
 	void setEnemyNodes();
 };
+
 
 #endif
